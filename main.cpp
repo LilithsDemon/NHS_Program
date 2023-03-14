@@ -65,7 +65,7 @@ void startMenu()
             case 2:
                 break;
             case 3:
-                exit(0);
+                exit(0); // Ends the program
                 break;
             default:
                 std::cout << "\n";
