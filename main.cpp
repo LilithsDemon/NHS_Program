@@ -2,6 +2,7 @@
 #include <string>
 #include <array>
 #include <stdlib.h>
+#include <fstream>
 
 
 //A salt is used to prepend to a password this allows for better security
@@ -42,9 +43,36 @@ bool passwordCheck(std::string given_password, unsigned long saved_password, std
     return false;
 }
 
-void createNewAccount(std::string username, unsigned long encrypted_password, std::string salt, int access)
+void createNewAccount(std::string username, std::string password, int access)
 {
+    //This past will create a new account
+    //It should ask the user for a password and username
+    //A user access level should be assigned
+    //1 = user 2= hospital staff
     
+    std::string salt = generateSalt();
+    unsigned long hashed_password = hashPassword(password, salt);
+    
+    std::ifstream users_read("users.csv");
+    std::string file_data = "";
+    
+    //Read current file first
+
+    //Closes our text file.
+    textFile.close();
+    
+    std::ofstream users("users.csv"); // The file which contains account details
+    
+    users << username << "," << hashed_password << "," << salt << "," << access << "\n"; //Writing to CSV file
+    
+    users.close();
+}
+
+void accountCreation()
+{
+    std::cout << "What is your username: ";
+    std::string username;
+    std::cin >> username;
 }
 
 void startMenu()
@@ -61,6 +89,7 @@ void startMenu()
         switch(option)
         {
             case 1:
+                createNewAccount("Bob", "password", 1);
                 break;
             case 2:
                 break;
