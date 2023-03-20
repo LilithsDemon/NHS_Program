@@ -36,13 +36,33 @@ unsigned long hashPassword(std::string password, std::string salt)
     return hashed_password;
 }
 
-bool passwordCheck(std::string given_password, unsigned long saved_password, std::string salt)
+bool passwordCheck(std::string username, std::string given_password)
 {
-    if(hashPassword(given_password, salt) == saved_password) //If hashing given password with same salt makes saved password then it is correct password
+    std::ifstream users_read("users.csv");
+    std::string name = "";
+
+    std::string data;
+
+    while (getline(users_read, data))
     {
-        return true;
+        int end_of_name = data.find(",");
+        if(data.substr(0, end_of_name) == username)
+        {
+            data = data.substr(end_of_name + 1, data.size()-end_of_name);
+            int end_of_hashed_password = data.find(",");
+            long saved_password = std::atol(data.substr(0, end_of_hashed_password).c_str());
+            data = data.substr(end_of_hashed_password + 1, data.size()-end_of_hashed_password+1);
+            int end_of_salt = data.find(",");
+            std::string salt = data.substr(0, end_of_salt);
+            if(hashPassword(given_password, salt) == saved_password) //If hashing given password with same salt makes saved password then it is correct password
+            {
+                return true;
+            }
+            return false;
+        }
     }
-    return false;
+
+    
 }
 
 void createNewAccount(std::string username, std::string password, int access)
@@ -55,12 +75,12 @@ void createNewAccount(std::string username, std::string password, int access)
     std::string salt = generateSalt();
     unsigned long hashed_password = hashPassword(password, salt);
     
-    std::ifstream users_read("users.csv");
+    std::ifstream users_read("users.csv"); //Opens the file in read mode
     std::string file_data = "";
     
     //Read current file first
 
-    std::vector<std::string> all_users;
+    std::vector<std::string> all_users; //Makes a vector for all of the users data to be stored in
     
     //This will store the text from the file.
     std::string data = "";
@@ -68,15 +88,14 @@ void createNewAccount(std::string username, std::string password, int access)
     //This while loop will output each of the lines in the text file.
     while (getline(users_read, data))
     {
-        all_users.push_back(data + "\n");
+        all_users.push_back(data + "\n"); //Adds individuals data into the vecotr
     }
 
-    //Closes our text file.
-    users_read.close();
+    users_read.close(); //Close the file
 
-    std::string current_user_data = username + "," + std::to_string(hashed_password) + "," + salt + "," + std::to_string(access) + "\n";
+    std::string current_user_data = username + "," + std::to_string(hashed_password) + "," + salt + "," + std::to_string(access) + "\n"; // Creates the data in the form of csv for the next person
 
-    all_users.push_back(current_user_data);
+    all_users.push_back(current_user_data); //Adds to vector
     
     std::ofstream users("users.csv"); // The file which contains account details
     
@@ -88,11 +107,107 @@ void createNewAccount(std::string username, std::string password, int access)
     users.close();
 }
 
-void accountCreation()
+bool checkForUsername(std::string username)
 {
-    std::cout << "What is your username: ";
+    std::ifstream users_read("users.csv");
+    std::string name = "";
+
+    std::string data;
+
+    while (getline(users_read, data))
+    {
+        int end_of_name = data.find(",");
+        if(data.substr(0, end_of_name) == username)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::vector<std::string> accountCreation()
+{
+    std::vector<std::string> users_data;
+    std::string given_username;
+
+    while(true){
+        std::cout << "What is the username for the account: ";
+        std::cin >> given_username;
+
+        if (!given_username.find(','))
+        {
+            std::cout << "Sorry, username cannot contain the character ','";
+        }
+        else
+        {
+            if(!checkForUsername(given_username))
+            {
+                break;
+            }
+            else
+            {
+                std::cout << "Sorry that username already exists, please choose another one";
+            }
+        }
+
+        
+    }
+
+    std::cout << "What is the password for the account: ";
+    std::string given_password;
+    std::cin >> given_password;
+
+    users_data.push_back(given_username);
+    users_data.push_back(given_password);
+
+    return users_data;
+}
+
+std::string getUserRank(std::string username)
+{
+    std::ifstream users_read("users.csv");
+    std::string name = "";
+
+    std::string data;
+
+    while (getline(users_read, data))
+    {
+        int end_of_name = data.find(",");
+        if(data.substr(0, end_of_name) == username)
+        {
+            return data.substr(data.size()-1, 1);
+        }
+    }
+}
+
+bool login()
+{
+    std::cout << "Enter your username: ";
     std::string username;
     std::cin >> username;
+
+    std::cout << "Enter your password: ";
+    std::string password;
+    std::cin >> password;
+
+    if(checkForUsername(username))
+    {
+        if(!passwordCheck(username, password))
+        {
+            std::cout << "Sorry that password was incorrect";
+            return false;
+        }else
+        {
+            std::string rank = getUserRank(username);
+            return true;
+        }
+    }
+    else
+    {
+        std::cout << "Sorry that username does not exist";
+        return false;
+    }
+
 }
 
 void startMenu()
@@ -106,12 +221,15 @@ void startMenu()
         std::cout << "3. Exit" << "\n";
         int option;
         std::cin >> option;
+        std::vector<std::string> users_data;
         switch(option)
         {
             case 1:
-                createNewAccount("Bob", "password", 1);
+                login();
                 break;
             case 2:
+                users_data = accountCreation();
+                createNewAccount(users_data[0], users_data[1], 1);
                 break;
             case 3:
                 exit(0); // Ends the program
