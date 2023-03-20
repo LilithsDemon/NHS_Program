@@ -2,7 +2,9 @@
 #include <string>
 #include <array>
 #include <stdlib.h>
+#include <sstream>
 #include <fstream>
+#include <vector>
 
 
 //A salt is used to prepend to a password this allows for better security
@@ -58,13 +60,31 @@ void createNewAccount(std::string username, std::string password, int access)
     
     //Read current file first
 
+    std::vector<std::string> all_users;
+    
+    //This will store the text from the file.
+    std::string data = "";
+
+    //This while loop will output each of the lines in the text file.
+    while (getline(users_read, data))
+    {
+        all_users.push_back(data + "\n");
+    }
+
     //Closes our text file.
-    textFile.close();
+    users_read.close();
+
+    std::string current_user_data = username + "," + std::to_string(hashed_password) + "," + salt + "," + std::to_string(access) + "\n";
+
+    all_users.push_back(current_user_data);
     
     std::ofstream users("users.csv"); // The file which contains account details
     
-    users << username << "," << hashed_password << "," << salt << "," << access << "\n"; //Writing to CSV file
-    
+    for(int i = 0; i < all_users.size(); i++)
+    {
+        users << all_users[i]; //Writing to CSV file
+    }
+
     users.close();
 }
 
