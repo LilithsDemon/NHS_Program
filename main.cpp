@@ -5,6 +5,7 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <bits/stdc++.h>
 
 
 //A salt is used to prepend to a password this allows for better security
@@ -36,6 +37,32 @@ unsigned long hashPassword(std::string password, std::string salt)
     return hashed_password;
 }
 
+std::vector<std::vector<std::string>> extractCSV(std::string file_name)
+{
+    std::ifstream file(file_name);
+    std::string data;
+    std::string delim = ",";
+
+    std::vector<std::vector<std::string>> all_data;
+    std::vector<std::string> current_data;
+
+    while(getline(file, data))
+    {
+        current_data.clear();
+        if(strstr(data.c_str(), delim.c_str()))
+        {
+            int pos = data.find(',');
+            current_data.push_back(data.substr(0, pos));
+            data = data.substr(pos+1, data.size()-pos);
+        }
+        all_data.push_back(current_data);
+    }
+
+    file.close();
+
+    return all_data;
+}
+
 bool passwordCheck(std::string username, std::string given_password)
 {
     std::ifstream users_read("users.csv");
@@ -56,16 +83,18 @@ bool passwordCheck(std::string username, std::string given_password)
             std::string salt = data.substr(0, end_of_salt);
             if(hashPassword(given_password, salt) == saved_password) //If hashing given password with same salt makes saved password then it is correct password
             {
+                users_read.close();
                 return true;
             }
-            return false;
         }
     }
+    users_read.close();
+    return false;
 
     
 }
 
-void createNewAccount(std::string username, std::string password, int access)
+void createNewAccount(std::string username, std::string password, std::string age, int access)
 {
     //This past will create a new account
     //It should ask the user for a password and username
@@ -93,7 +122,7 @@ void createNewAccount(std::string username, std::string password, int access)
 
     users_read.close(); //Close the file
 
-    std::string current_user_data = username + "," + std::to_string(hashed_password) + "," + salt + "," + std::to_string(access) + "\n"; // Creates the data in the form of csv for the next person
+    std::string current_user_data = username + "," + std::to_string(hashed_password) + "," + salt + "," + std::to_string(access) + age + "\n"; // Creates the data in the form of csv for the next person
 
     all_users.push_back(current_user_data); //Adds to vector
     
@@ -157,8 +186,13 @@ std::vector<std::string> accountCreation()
     std::string given_password;
     std::cin >> given_password;
 
+    std::cout << "And finally what is your age: ";
+    std::string age;
+    std::cin >> age;
+
     users_data.push_back(given_username);
     users_data.push_back(given_password);
+    users_data.push_back(age);
 
     return users_data;
 }
@@ -178,6 +212,18 @@ std::string getUserRank(std::string username)
             return data.substr(data.size()-1, 1);
         }
     }
+
+    return "";
+}
+
+void paitentMenu(std::string username)
+{
+
+}
+
+void doctorMenu(std::string username)
+{
+
 }
 
 bool login()
@@ -199,6 +245,13 @@ bool login()
         }else
         {
             std::string rank = getUserRank(username);
+            if(rank == "1")
+            {
+                paitentMenu(username);
+            }
+            else{
+                doctorMenu(username);
+            }
             return true;
         }
     }
@@ -229,7 +282,7 @@ void startMenu()
                 break;
             case 2:
                 users_data = accountCreation();
-                createNewAccount(users_data[0], users_data[1], 1);
+                createNewAccount(users_data[0], users_data[1], users_data[2], 1);
                 break;
             case 3:
                 exit(0); // Ends the program
@@ -243,7 +296,10 @@ void startMenu()
 
 int main()
 {
-    startMenu();
+    //startMenu();
+
+    std::vector<std::vector<std::string>> all_data = extractCSV("users.csv");
+    std::cout << all_data[0][1];
     
     return 0;
 }
