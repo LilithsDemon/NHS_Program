@@ -235,9 +235,31 @@ std::string getUserRank(std::string username)
     return "";
 }
 
+void patientForm(std::string username)
+{
+    
+}
+
 void paitentMenu(std::string username)
 {
+    std::vector<std::vector<std::string>> verification = extractCSV("verify.csv");
+    bool verify = false;
+    for(int i = 0; i< verification.size(); i++)
+    {
+        if(verification[i][0] == username)
+        {
+            if(verification[i][1] == "true")
+            {
+                verify = true;
+                break;
+            }
+        }
+    }
 
+    if(verify == "false")
+    {
+        patientForm();
+    }
 }
 
 void doctorMenu(std::string username)
