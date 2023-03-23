@@ -49,13 +49,21 @@ std::vector<std::vector<std::string>> extractCSV(std::string file_name)
     while(getline(file, data))
     {
         current_data.clear();
-        if(strstr(data.c_str(), delim.c_str()))
+        while(true)
         {
-            int pos = data.find(',');
-            current_data.push_back(data.substr(0, pos));
-            data = data.substr(pos+1, data.size()-pos);
+            if(strstr(data.c_str(), delim.c_str()))
+            {
+                int pos = data.find(',');
+                current_data.push_back(data.substr(0, pos));
+                data = data.substr(pos+1, data.size());
+            }
+            else
+            {
+                current_data.push_back(data);
+                all_data.push_back(current_data);
+                break;
+            }
         }
-        all_data.push_back(current_data);
     }
 
     file.close();
@@ -105,11 +113,11 @@ void createNewAccount(std::string username, std::string password, std::string ag
     unsigned long hashed_password = hashPassword(password, salt);
     
     std::ifstream users_read("users.csv"); //Opens the file in read mode
-    std::string file_data = "";
     
     //Read current file first
 
     std::vector<std::string> all_users; //Makes a vector for all of the users data to be stored in
+    std::vector<std::string> users_verification; //Makes a vector to read users verifivation
     
     //This will store the text from the file.
     std::string data = "";
@@ -122,9 +130,20 @@ void createNewAccount(std::string username, std::string password, std::string ag
 
     users_read.close(); //Close the file
 
-    std::string current_user_data = username + "," + std::to_string(hashed_password) + "," + salt + "," + std::to_string(access) + age + "\n"; // Creates the data in the form of csv for the next person
+    std::ifstream verificaton("verify.csv");
+
+    data = "";
+
+    while (getline(verificaton, data))
+    {
+        users_verification.push_back(data + "\n"); //Adds individuals data into the vecotr
+    }
+
+    std::string current_user_data = username + "," + std::to_string(hashed_password) + "," + salt + "," + age + "," + std::to_string(access) + "\n"; // Creates the data in the form of csv for the next person
+    std::string current_verification_data = username + "," + "false";
 
     all_users.push_back(current_user_data); //Adds to vector
+    users_verification.push_back(current_verification_data);
     
     std::ofstream users("users.csv"); // The file which contains account details
     
@@ -134,19 +153,24 @@ void createNewAccount(std::string username, std::string password, std::string ag
     }
 
     users.close();
+
+    std::ofstream verification_file("verify.csv");
+
+    for(int i = 0; i < users_verification.size(); i++)
+    {
+        verification_file << users_verification[i]; //Writing to CSV file
+    }
+
+    verification_file.close();
+
 }
 
 bool checkForUsername(std::string username)
 {
-    std::ifstream users_read("users.csv");
-    std::string name = "";
-
-    std::string data;
-
-    while (getline(users_read, data))
+    std::vector<std::vector<std::string>> users = extractCSV("users.csv");
+    for(int i = 0; i < users.size(); i++)
     {
-        int end_of_name = data.find(",");
-        if(data.substr(0, end_of_name) == username)
+        if(username == users[i][0])
         {
             return true;
         }
@@ -199,17 +223,12 @@ std::vector<std::string> accountCreation()
 
 std::string getUserRank(std::string username)
 {
-    std::ifstream users_read("users.csv");
-    std::string name = "";
-
-    std::string data;
-
-    while (getline(users_read, data))
+    std::vector<std::vector<std::string>> users = extractCSV("users.csv");
+    for(int i = 0; i < users.size(); i++)
     {
-        int end_of_name = data.find(",");
-        if(data.substr(0, end_of_name) == username)
+        if(username == users[i][0])
         {
-            return data.substr(data.size()-1, 1);
+            return users[i][4];
         }
     }
 
@@ -296,10 +315,7 @@ void startMenu()
 
 int main()
 {
-    //startMenu();
+    startMenu();
 
-    std::vector<std::vector<std::string>> all_data = extractCSV("users.csv");
-    std::cout << all_data[0][1];
-    
     return 0;
 }
