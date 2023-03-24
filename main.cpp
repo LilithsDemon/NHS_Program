@@ -37,6 +37,32 @@ unsigned long hashPassword(std::string password, std::string salt)
     return hashed_password;
 }
 
+void writeToCSV(std::string file_name, std::string to_write)
+{
+    std::vector<std::string> all_data;
+    std::string data;
+
+    //First read all file
+    std::ifstream file_read(file_name);
+
+    while(getline(file_read, data))
+    {
+        all_data.push_back(data + "\n");
+    }
+
+    file_read.close();
+
+    all_data.push_back(to_write);
+    std::ofstream file_write(file_name);
+    
+    for(int i = 0; i < all_data.size(); i++)
+    {
+        file_write << all_data[i];
+    }
+
+    file_write.close();
+}
+
 std::vector<std::vector<std::string>> extractCSV(std::string file_name)
 {
     std::ifstream file(file_name);
@@ -111,57 +137,12 @@ void createNewAccount(std::string username, std::string password, std::string ag
     
     std::string salt = generateSalt();
     unsigned long hashed_password = hashPassword(password, salt);
-    
-    std::ifstream users_read("users.csv"); //Opens the file in read mode
-    
-    //Read current file first
 
-    std::vector<std::string> all_users; //Makes a vector for all of the users data to be stored in
-    std::vector<std::string> users_verification; //Makes a vector to read users verifivation
-    
-    //This will store the text from the file.
-    std::string data = "";
-
-    //This while loop will output each of the lines in the text file.
-    while (getline(users_read, data))
-    {
-        all_users.push_back(data + "\n"); //Adds individuals data into the vecotr
-    }
-
-    users_read.close(); //Close the file
-
-    std::ifstream verificaton("verify.csv");
-
-    data = "";
-
-    while (getline(verificaton, data))
-    {
-        users_verification.push_back(data + "\n"); //Adds individuals data into the vecotr
-    }
-
-    std::string current_user_data = username + "," + std::to_string(hashed_password) + "," + salt + "," + age + "," + std::to_string(access) + "\n"; // Creates the data in the form of csv for the next person
+    std::string current_user_data = username + "," + std::to_string(hashed_password) + "," + salt + "," + age + "," + std::to_string(access); // Creates the data in the form of csv for the next person
     std::string current_verification_data = username + "," + "false";
 
-    all_users.push_back(current_user_data); //Adds to vector
-    users_verification.push_back(current_verification_data);
-    
-    std::ofstream users("users.csv"); // The file which contains account details
-    
-    for(int i = 0; i < all_users.size(); i++)
-    {
-        users << all_users[i]; //Writing to CSV file
-    }
-
-    users.close();
-
-    std::ofstream verification_file("verify.csv");
-
-    for(int i = 0; i < users_verification.size(); i++)
-    {
-        verification_file << users_verification[i]; //Writing to CSV file
-    }
-
-    verification_file.close();
+    writeToCSV("users.csv", current_user_data);
+    writeToCSV("verify.csv", current_verification_data);
 
 }
 
@@ -237,7 +218,101 @@ std::string getUserRank(std::string username)
 
 void patientForm(std::string username)
 {
-    
+    std::string cancer;
+    int cancer_type = 0;
+    std::string diabetes;
+    int diabetes_type = 0;
+    std::string smoking;
+    int smoking_type = 0;
+    std::cout << "\nWelcome to the NHS program, this is a qestionaire so that you can get your medical data\n";
+    while(true){
+        std::cout << "First do you have cancer: (y/n): ";
+        std::cin >> cancer;
+        if(cancer == "y" || cancer == "Y")
+        {
+            while(true){
+                std::cout << "What stage cancer are you in: 1-4: ";
+                std::cin >> cancer_type;
+                if(cancer_type > 0 && cancer_type < 5)
+                {
+                    break;
+                }
+                else
+                {
+                    std::cout << "Please select an option between 1 and 4";
+                }
+            }
+            break;
+        }
+        else if(cancer == "n" || cancer == "N")
+        {
+            break;
+        }
+        else
+        {
+            std::cout << "Sorry please select yes (y) or no (n)";
+        }
+    }
+    while(true)
+    {
+        std::cout << "Do you have diabetes: (y/n): ";
+        std::cin >> diabetes;
+        if(diabetes == "y" || diabetes == "Y")
+        {
+            while(true)
+            {
+                std::cout << "Do you have type 1 or type 2 diabetes (1/2): ";
+                std::cin >> diabetes_type;
+                if(diabetes_type > 0 && diabetes_type < 3)
+                {
+                    break;
+                }
+                else
+                {
+                    std::cout << "Sorry please enter a value between 1 and 2";
+                }
+            }
+            break;
+        }
+        else if(diabetes == "n" || diabetes == "N")
+        {
+            break;
+        }
+        else
+        {
+            std::cout << "Please enter y or n for yes or no";
+        }
+    }
+    while(true)
+    {
+        std::cout << "Do you smoke (y/n): ";
+        std::cin >> smoking;
+        if(smoking == "y" || smoking == "Y")
+        {
+            while(true)
+            {
+                std::cout << "How long does it take you to smoke 1 pack: 1: A month, 2: A week, 3: A Day: ";
+                std::cin >> smoking_type;
+                if(smoking_type > 0 && smoking_type < 4)
+                {
+                    break;
+                }
+                else
+                {
+                    std::cout << "Please enter a value between 1 and 3";
+                }
+            }
+            break;
+        }
+        else if(smoking == "n" || smoking == "N")
+        {
+            break;
+        }
+        else
+        {
+            std::cout << "Please enter y for yes or n for no: ";
+        }
+    }
 }
 
 void paitentMenu(std::string username)
@@ -256,9 +331,9 @@ void paitentMenu(std::string username)
         }
     }
 
-    if(verify == "false")
+    if(verify == false)
     {
-        patientForm();
+        patientForm(username);
     }
 }
 
