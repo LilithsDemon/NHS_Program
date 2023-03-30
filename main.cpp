@@ -37,27 +37,33 @@ unsigned long hashPassword(std::string password, std::string salt)
     return hashed_password;
 }
 
-void writeToCSV(std::string file_name, std::string to_write)
+void writeToCSV(std::string file_name, std::string to_write, bool type = 1)
 {
-    std::vector<std::string> all_data;
-    std::string data;
-
-    //First read all file
-    std::ifstream file_read(file_name);
-
-    while(getline(file_read, data))
-    {
-        all_data.push_back(data + "\n");
-    }
-
-    file_read.close();
-
-    all_data.push_back(to_write);
     std::ofstream file_write(file_name);
-    
-    for(int i = 0; i < all_data.size(); i++)
-    {
-        file_write << all_data[i];
+        
+    if(type == 1){
+        std::vector<std::string> all_data;
+        std::string data;
+
+        //First read all file
+        std::ifstream file_read(file_name);
+
+        while(getline(file_read, data))
+        {
+            all_data.push_back(data + "\n");
+        }
+
+        file_read.close();
+
+        all_data.push_back(to_write);
+
+        for(int i = 0; i < all_data.size(); i++)
+        {
+            file_write << all_data[i];
+        }
+    }
+    else{
+        file_write << to_write;
     }
 
     file_write.close();
@@ -216,6 +222,21 @@ std::string getUserRank(std::string username)
     return "";
 }
 
+void verifyUser(std::string username)
+{
+    std::vector<std::vector<std::string>> verifications = extractCSV("verify.csv");
+    std::string string_to_write = "";
+    for(int i = 0; i < verifications.size(); i++)
+    {
+        if(verifications[i][0] == username){
+            verifications[i][1] = "true";
+        }
+        string_to_write += verifications[i][0] + "," + verifications[i][1] + "\n";
+    }
+    std::cout << string_to_write;
+    writeToCSV("verify.csv", string_to_write);
+}
+
 void patientForm(std::string username)
 {
     std::string cancer;
@@ -225,6 +246,7 @@ void patientForm(std::string username)
     std::string smoking;
     int smoking_type = 0;
     std::cout << "\nWelcome to the NHS program, this is a qestionaire so that you can get your medical data\n";
+    std::string string_to_write = username;
     while(true){
         std::cout << "First do you have cancer: (y/n): ";
         std::cin >> cancer;
@@ -242,10 +264,12 @@ void patientForm(std::string username)
                     std::cout << "Please select an option between 1 and 4";
                 }
             }
+            string_to_write += "," + std::to_string(cancer_type);
             break;
         }
         else if(cancer == "n" || cancer == "N")
         {
+            string_to_write += ",0";
             break;
         }
         else
@@ -265,6 +289,7 @@ void patientForm(std::string username)
                 std::cin >> diabetes_type;
                 if(diabetes_type > 0 && diabetes_type < 3)
                 {
+                    string_to_write += "," + std::to_string(diabetes_type);
                     break;
                 }
                 else
@@ -276,6 +301,7 @@ void patientForm(std::string username)
         }
         else if(diabetes == "n" || diabetes == "N")
         {
+            string_to_write += ",0";
             break;
         }
         else
@@ -295,6 +321,7 @@ void patientForm(std::string username)
                 std::cin >> smoking_type;
                 if(smoking_type > 0 && smoking_type < 4)
                 {
+                    string_to_write += "," + std::to_string(smoking_type);
                     break;
                 }
                 else
@@ -306,6 +333,7 @@ void patientForm(std::string username)
         }
         else if(smoking == "n" || smoking == "N")
         {
+            string_to_write += ",0";
             break;
         }
         else
@@ -313,6 +341,9 @@ void patientForm(std::string username)
             std::cout << "Please enter y for yes or n for no: ";
         }
     }
+    std::cout << "Thank you for completing this form";
+    writeToCSV("conditions.csv", string_to_write, 0);
+    verifyUser(username);
 }
 
 void paitentMenu(std::string username)
