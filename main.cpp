@@ -12,6 +12,10 @@
 //For a salt to work properly it has to be different each time the program is used by someone
 //It also has to be random and long this will get prepended to the hashed password
 
+void clearTerm()
+{
+    std::cout << "\033[2J\033[1;1H";
+}
 
 std::string generateSalt()
 {
@@ -171,6 +175,7 @@ std::vector<std::string> accountCreation()
     std::string given_username;
 
     while(true){
+        clearTerm();
         std::cout << "What is the username for the account: ";
         std::cin >> given_username;
 
@@ -245,6 +250,7 @@ void patientForm(std::string username)
     int diabetes_type = 0;
     std::string smoking;
     int smoking_type = 0;
+    clearTerm();
     std::cout << "\nWelcome to the NHS program, this is a qestionaire so that you can get your medical data\n";
     std::string string_to_write = username;
     while(true){
@@ -279,6 +285,7 @@ void patientForm(std::string username)
     }
     while(true)
     {
+        clearTerm();
         std::cout << "Do you have diabetes: (y/n): ";
         std::cin >> diabetes;
         if(diabetes == "y" || diabetes == "Y")
@@ -311,6 +318,7 @@ void patientForm(std::string username)
     }
     while(true)
     {
+        clearTerm();
         std::cout << "Do you smoke (y/n): ";
         std::cin >> smoking;
         if(smoking == "y" || smoking == "Y")
@@ -346,6 +354,76 @@ void patientForm(std::string username)
     verifyUser(username);
 }
 
+class User
+{
+    private:
+        std::string username;
+        std::vector<std::string> conditions;
+        double cost; //per day
+
+        std::vector<std::string> getConditions(std::string username)
+        {
+            std::vector<std::vector<std::string>> all_conditions = extractCSV("conditions.csv");
+            int pos = 0;
+            for(int i = 0; i < all_conditions.size(); i++)
+            {
+                if(all_conditions[i][0] == username)
+                {
+                    pos = i;
+                    break;
+                }
+            }
+
+            std::vector<std::string> current_conditions;
+
+            for(int i = 1; i < all_conditions[pos].size(); i++)
+            {
+                current_conditions.push_back(all_conditions[pos][i]);
+            }
+            return current_conditions;
+        }
+
+        double getCost (std::vector<std::string> conditions)
+        {
+            double cost = 0;
+            std::map<int, std::string> condition_map{{0, "diabetes.csv"}, {1, "cancer.csv"}, {2, "smoking.csv"}};
+            int val = 0;
+            for(int i = 0; i < 3; i++)
+            {
+                val = std::stoi(conditions[i]);
+                val -= 1;
+                if(val != -1)
+                {
+                    cost = cost + (std::stod(extractCSV(condition_map[i])[val][3]) * std::stod(extractCSV(condition_map[i])[val][4]));
+                }
+            }
+            return cost;
+        }
+
+    public:
+        User(std::string given_username)
+            :username(given_username)
+        {
+            conditions = getConditions(username);
+            cost = getCost(conditions);
+        }
+
+        std::vector<std::string> userConditions() {
+            return conditions;
+        }
+
+        double userCost()
+        {
+            return cost;
+        }
+
+        void refresh()
+        {
+            conditions = getConditions(username);
+            cost = getCost(conditions);
+        }
+};
+
 void paitentMenu(std::string username)
 {
     std::vector<std::vector<std::string>> verification = extractCSV("verify.csv");
@@ -366,6 +444,37 @@ void paitentMenu(std::string username)
     {
         patientForm(username);
     }
+
+    User user(username);
+
+    int choice = 0;
+    bool loggedIn = true;
+
+    clearTerm();
+
+    while (loggedIn == true){
+        std::cout << "Welcome patient: What would you like to do:\n";
+        std::cout << "1. Redo form\n";
+        std::cout << "2. Get daily cost for treatments\n";
+        std::cout << "3. Log out\n";
+        std::cout << ":: ";
+        std::cin >> choice;
+        switch(choice)
+        {
+            case 1:
+                patientForm(username);
+                break;
+            case 2:
+                std::cout << "$" << user.userCost() << " per day\n";
+                break;
+            case 3:
+                loggedIn = false;
+                break;
+            default:
+                std::cout << "Sorry please enter a correct value\n";
+                break;
+        }
+    }
 }
 
 void doctorMenu(std::string username)
@@ -375,6 +484,7 @@ void doctorMenu(std::string username)
 
 bool login()
 {
+    clearTerm();
     std::cout << "Enter your username: ";
     std::string username;
     std::cin >> username;
@@ -412,6 +522,7 @@ bool login()
 
 void startMenu()
 {
+    clearTerm();
     std::cout << "___Welcome to NHS Console___" << "\n\n";
     std::cout << "What would you like to do" << "\n";
     while(true)
@@ -426,6 +537,7 @@ void startMenu()
         {
             case 1:
                 login();
+                clearTerm();
                 break;
             case 2:
                 users_data = accountCreation();
