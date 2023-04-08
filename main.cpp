@@ -356,8 +356,47 @@ void patientForm(std::string username)
 
 class User
 {
-    private:
+    public:
         std::string username;
+};
+
+class Doctor : public User
+{
+    private:
+        std::vector<std::string> assigned_patients;
+
+        std::vector<std::string> getAssignedPatients()
+        {
+            std::vector<std::vector<std::string>> all_patients = extractCSV("assigned.csv");
+            std::vector<std::string> patients;
+            for(int i = 0; i < all_patients.size(); i++)
+            {
+                if(all_patients[i][0] == username)
+                {
+                    patients.push_back(all_patients[i][1]);
+                }
+            }
+            
+            return patients;
+        }
+
+    public:
+        Doctor(std::string given_username)
+        {
+            username = given_username;
+            assigned_patients = getAssignedPatients();
+        }
+
+        std::vector<std::string> getPatients()
+        {
+            return assigned_patients;
+        }
+        
+};
+
+class Patient : public User
+{
+    private:
         std::vector<std::string> conditions;
         double cost; //per day
 
@@ -401,9 +440,9 @@ class User
         }
 
     public:
-        User(std::string given_username)
-            :username(given_username)
+        Patient(std::string given_username)
         {
+            username = given_username;
             conditions = getConditions(username);
             cost = getCost(conditions);
         }
@@ -445,7 +484,7 @@ void paitentMenu(std::string username)
         patientForm(username);
     }
 
-    User user(username);
+    Patient user(username);
 
     int choice = 0;
     bool loggedIn = true;
