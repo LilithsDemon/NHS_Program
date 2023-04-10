@@ -362,7 +362,7 @@ class User
 
 class Doctor : public User
 {
-    private:
+    protected:
         std::vector<std::string> assigned_patients;
 
         std::vector<std::string> getAssignedPatients()
@@ -387,11 +387,30 @@ class Doctor : public User
             assigned_patients = getAssignedPatients();
         }
 
+        Doctor()
+        {
+            
+        };
+
         std::vector<std::string> getPatients()
         {
             return assigned_patients;
         }
         
+};
+
+class HeadDoctor : public Doctor
+{
+    public:
+        HeadDoctor(std::string given_username)
+        {
+            username = given_username;
+            assigned_patients = getAssignedPatients();
+        }
+        std::string getName()
+        {
+            return username;
+        }
 };
 
 class Patient : public User
@@ -594,7 +613,9 @@ void startMenu()
 
 int main()
 {
-    startMenu();
+    //startMenu();
+
+    HeadDoctor bob("Bob");
 
     return 0;
 }
