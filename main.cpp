@@ -407,10 +407,7 @@ class HeadDoctor : public Doctor
             username = given_username;
             assigned_patients = getAssignedPatients();
         }
-        std::string getName()
-        {
-            return username;
-        }
+        
 };
 
 class Patient : public User
