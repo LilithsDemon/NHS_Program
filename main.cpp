@@ -356,7 +356,7 @@ void patientForm(std::string username)
 
 class User
 {
-    public:
+    protected:
         std::string username;
 };
 
@@ -399,13 +399,43 @@ class Doctor : public User
         
 };
 
-class HeadDoctor : public Doctor
+class Pharmacist : public User
 {
+    public:
+        Pharmacist(std::string given_username)
+        {
+            username = given_username;
+        }
+        Pharmacist()
+        {
+
+        }
+};
+
+class HeadDoctor : public Doctor, public Pharmacist
+{
+    private:
+        std::vector<std::string> doctors;
     public:
         HeadDoctor(std::string given_username)
         {
-            username = given_username;
+            Doctor::username = given_username;
             assigned_patients = getAssignedPatients();
+            doctors = getAllDoctors();
+        }
+
+        std::vector<std::string> getAllDoctors()
+        {
+            std::vector<std::vector<std::string>> all_users = extractCSV("users.csv");
+            std::vector<std::string> all_doctors;
+            for(int i = 0; i < all_users.size(); i++)
+            {
+                if(all_users[i][4] == "2" || all_users[i][4] == "3")
+                {
+                    all_doctors.push_back(all_users[i][0]);
+                }
+            }
+            return all_doctors;
         }
         
 };
@@ -534,7 +564,20 @@ void paitentMenu(std::string username)
 
 void doctorMenu(std::string username)
 {
+    Doctor user(username);
+    clearTerm();
+}
 
+void headDoctorMenu(std::string username)
+{
+    HeadDoctor user(username);
+    clearTerm();
+}
+
+void pharmacistMenu(std::string username)
+{
+    Pharmacist user(username);
+    clearTerm();
 }
 
 bool login()
@@ -557,12 +600,21 @@ bool login()
         }else
         {
             std::string rank = getUserRank(username);
-            if(rank == "1")
+            int int_rank = std::stoi(rank);
+            switch (int_rank)
             {
+            case 1:
                 paitentMenu(username);
-            }
-            else{
+                break;
+            case 2:
                 doctorMenu(username);
+                break;
+            case 3:
+                headDoctorMenu(username);
+                break;
+            case 4:
+                pharmacistMenu(username);
+                break;
             }
             return true;
         }
