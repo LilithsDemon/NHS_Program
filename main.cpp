@@ -437,6 +437,36 @@ class HeadDoctor : public Doctor, public Pharmacist
             }
             return all_doctors;
         }
+
+        std::vector<std::string> getUnassignedPatients()
+        {
+            std::vector<std::vector<std::string>> all_users = extractCSV("users.csv");
+            std::vector<std::vector<std::string>> all_assigned = extractCSV("assigned.csv");
+            std::vector<std::string> unassigned_patients;
+            bool found = false;
+
+            for(int i = 0; i < all_users.size(); i++)
+            {
+                if(all_users[i][4] == "1")
+                {
+                    found = false;
+                    for(int x = 0; x < all_assigned.size(); x++)
+                    {
+                        if(all_users[i][4] == all_assigned[x][1])
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if(found == false)
+                    {
+                        unassigned_patients.push_back(all_users[i][0]);
+                    }
+                }
+            }
+
+            return unassigned_patients;
+        }
         
 };
 
