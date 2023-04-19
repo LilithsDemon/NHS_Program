@@ -360,7 +360,38 @@ class User
         std::string username;
 };
 
-class Doctor : public User
+
+class Pharmacist : public User
+{
+    public:
+        Pharmacist(std::string given_username)
+        {
+            username = given_username;
+        }
+        Pharmacist()
+        {
+
+        }
+
+        void changePrescription(std::string given_username, int condition, int prescription)
+        {
+            std::vector<std::vector<std::string>> all_prescriptions = extractCSV("prescriptions.csv");
+            std::vector<std::string> current_patient;
+
+            for(int i = 0; i < all_prescriptions.size(); i++)
+            {
+                if(given_username == all_prescriptions[i][0])
+                {
+                    current_patient = all_prescriptions[i];
+                    break;
+                }
+            }
+
+            current_patient[condition] = prescription;
+        }
+};
+
+class Doctor : public Pharmacist
 {
     protected:
         std::vector<std::string> assigned_patients;
@@ -399,29 +430,45 @@ class Doctor : public User
         
 };
 
-class Pharmacist : public User
-{
-    public:
-        Pharmacist(std::string given_username)
-        {
-            username = given_username;
-        }
-        Pharmacist()
-        {
-
-        }
-};
-
-class HeadDoctor : public Doctor, public Pharmacist
+class HeadDoctor : public Doctor
 {
     private:
         std::vector<std::string> doctors;
     public:
         HeadDoctor(std::string given_username)
         {
-            Doctor::username = given_username;
+            username = given_username;
             assigned_patients = getAssignedPatients();
             doctors = getAllDoctors();
+        }
+
+        void assignPatient(std::string username, std::string doctor)
+        {
+            std::vector<std::vector<std::string>> all_assigned = extractCSV("assigned.csv");
+            bool found = false;
+            for(int i = 0; i < all_assigned.size(); i++)
+            {
+                if(all_assigned[i][0] == username)
+                {
+                    found = true;
+                    all_assigned[i][1] = doctor;
+                }
+            }
+            if(found != true)
+            {
+                std::vector<std::string> to_add;
+                to_add.push_back(username);
+                to_add.push_back(doctor);
+                all_assigned.push_back(to_add);
+            }
+
+            //Write to CSV
+            std::string to_write;
+            for(int i = 0; i < all_assigned.size(); i++)
+            {
+                to_write += all_assigned[i][0] + ", " + all_assigned[i][1] + "\n";
+            }
+            writeToCSV("assigned.csv", to_write);
         }
 
         std::vector<std::string> getAllDoctors()
@@ -478,7 +525,7 @@ class Patient : public User
 
         std::vector<std::string> getConditions(std::string username)
         {
-            std::vector<std::vector<std::string>> all_conditions = extractCSV("conditions.csv");
+            std::vector<std::vector<std::string>> all_conditions = extractCSV("prescriptions.csv");
             int pos = 0;
             for(int i = 0; i < all_conditions.size(); i++)
             {
