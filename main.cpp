@@ -1,11 +1,12 @@
 #include <iostream>
 #include <string>
 #include <array>
-#include <stdlib.h>
 #include <sstream>
 #include <fstream>
 #include <vector>
 #include <bits/stdc++.h>
+#include <accounts.h>
+#include <files.h>
 
 
 //A salt is used to prepend to a password this allows for better security
@@ -39,72 +40,6 @@ unsigned long hashPassword(std::string password, std::string salt)
     std::string complete_password = password + salt; //append salt to given password
     unsigned long hashed_password = hash(complete_password); //has complete password
     return hashed_password;
-}
-
-void writeToCSV(std::string file_name, std::string to_write, bool type = 1)
-{
-    std::ofstream file_write(file_name);
-        
-    if(type == 1){
-        std::vector<std::string> all_data;
-        std::string data;
-
-        //First read all file
-        std::ifstream file_read(file_name);
-
-        while(getline(file_read, data))
-        {
-            all_data.push_back(data + "\n");
-        }
-
-        file_read.close();
-
-        all_data.push_back(to_write);
-
-        for(int i = 0; i < all_data.size(); i++)
-        {
-            file_write << all_data[i];
-        }
-    }
-    else{
-        file_write << to_write;
-    }
-
-    file_write.close();
-}
-
-std::vector<std::vector<std::string>> extractCSV(std::string file_name)
-{
-    std::ifstream file(file_name);
-    std::string data;
-    std::string delim = ",";
-
-    std::vector<std::vector<std::string>> all_data;
-    std::vector<std::string> current_data;
-
-    while(getline(file, data))
-    {
-        current_data.clear();
-        while(true)
-        {
-            if(strstr(data.c_str(), delim.c_str()))
-            {
-                int pos = data.find(',');
-                current_data.push_back(data.substr(0, pos));
-                data = data.substr(pos+1, data.size());
-            }
-            else
-            {
-                current_data.push_back(data);
-                all_data.push_back(current_data);
-                break;
-            }
-        }
-    }
-
-    file.close();
-
-    return all_data;
 }
 
 bool passwordCheck(std::string username, std::string given_password)
@@ -354,356 +289,6 @@ void patientForm(std::string username)
     verifyUser(username);
 }
 
-class User
-{
-    protected:
-        std::string username;
-};
-
-
-class Pharmacist : public User
-{
-    public:
-        Pharmacist(std::string given_username)
-        {
-            username = given_username;
-        }
-        Pharmacist()
-        {
-
-        }
-
-        void changePrescription(std::string given_username, int condition, int prescription)
-        {
-            std::vector<std::vector<std::string>> all_prescriptions = extractCSV("prescriptions.csv");
-            std::vector<std::string> current_patient;
-
-            for(int i = 0; i < all_prescriptions.size(); i++)
-            {
-                if(given_username == all_prescriptions[i][0])
-                {
-                    current_patient = all_prescriptions[i];
-                    break;
-                }
-            }
-
-            current_patient[condition] = prescription;
-        }
-};
-
-class Doctor : public Pharmacist
-{
-    protected:
-        std::vector<std::string> assigned_patients;
-
-        std::vector<std::string> getAssignedPatients()
-        {
-            std::vector<std::vector<std::string>> all_patients = extractCSV("assigned.csv");
-            std::vector<std::string> patients;
-            for(int i = 0; i < all_patients.size(); i++)
-            {
-                if(all_patients[i][0] == username)
-                {
-                    patients.push_back(all_patients[i][1]);
-                }
-            }
-            
-            return patients;
-        }
-
-    public:
-        Doctor(std::string given_username)
-        {
-            username = given_username;
-            assigned_patients = getAssignedPatients();
-        }
-
-        Doctor()
-        {
-            
-        };
-
-        std::vector<std::string> getPatients()
-        {
-            return assigned_patients;
-        }
-
-        std::string getPatientInfo(std::string given_username)
-        {
-            std::string data = given_username + ": Medical Data: ____\n__________________________________________\n";
-            data += "Conditions: ____\n";
-            
-            Patient patient(given_username);
-            std::vector<std::string> conditions = patient.userConditions();
-            std::vector<std::string> prescriptions = patient.userPrescriptions();
-            std::vector<std::vector<std::string>> prescription_data;
-            int val;
-            for(int i = 1; i < conditions.size(); i++)
-            {
-                val = std::stoi(conditions[i]);
-                if(val == 0)
-                {
-                    data += "    Patient does not ";
-                    switch(i)
-                    {
-                        case 1:
-                            data += "have diabetes\n";
-                            break;
-                        case 2:
-                            data += "smoke\n";
-                            break;
-                        case 3:
-                            data += "have cancer\n";
-                            break;
-                    }
-                }
-                else
-                {
-                    val -= 1;
-                    switch(i)
-                    {
-                        case 1:
-                            prescription_data = extractCSV("diabetes.csv");
-                            data += "    Patient has: ";
-                            break;
-                        case 2:
-                            prescription_data = extractCSV("smoking.csv");
-                            data += "    Patient is: ";
-                            break;
-                        case 3:
-                            prescription_data = extractCSV("cancer.csv");
-                            data += "    Patient has: ";
-                            break;
-                    }
-                    
-                    data += prescription_data[val][1] + "\n";
-                }
-            }
-            data += "\nPrescriptions____\n";
-            int prescription_base_val;
-            for(int i = 1; i < prescriptions.size(); i++)
-            {
-                val = std::stoi(prescriptions[i]);
-                if(val > 0)
-                {
-                    val -= 1;
-                    prescription_data = extractCSV("treatments.csv");
-                    switch(i)
-                    {
-                        case 1:
-                            prescription_base_val = 1;
-                            break;
-                        case 2:
-                            prescription_base_val = 3;
-                            break;
-                        case 3:
-                            prescription_base_val = 7;
-                            break;
-                    }
-                    data += "    Patient takes " + prescription_data[prescription_base_val + val][2] + prescription_data[prescription_base_val + val][3] + prescription_data[prescription_base_val + val][5] + "\n";
-                }
-            }
-            return data;
-        }
-};
-
-class HeadDoctor : public Doctor
-{
-    private:
-        std::vector<std::string> doctors;
-    public:
-        HeadDoctor(std::string given_username)
-        {
-            username = given_username;
-            assigned_patients = getAssignedPatients();
-            doctors = getAllDoctors();
-        }
-
-        void assignPatient(std::string username, std::string doctor)
-        {
-            std::vector<std::vector<std::string>> all_assigned = extractCSV("assigned.csv");
-            bool found = false;
-            for(int i = 0; i < all_assigned.size(); i++)
-            {
-                if(all_assigned[i][0] == username)
-                {
-                    found = true;
-                    all_assigned[i][1] = doctor;
-                }
-            }
-            if(found != true)
-            {
-                std::vector<std::string> to_add;
-                to_add.push_back(username);
-                to_add.push_back(doctor);
-                all_assigned.push_back(to_add);
-            }
-
-            //Write to CSV
-            std::string to_write;
-            for(int i = 0; i < all_assigned.size(); i++)
-            {
-                to_write += all_assigned[i][0] + ", " + all_assigned[i][1] + "\n";
-            }
-            writeToCSV("assigned.csv", to_write);
-        }
-
-        std::vector<std::string> getAllDoctors()
-        {
-            std::vector<std::vector<std::string>> all_users = extractCSV("users.csv");
-            std::vector<std::string> all_doctors;
-            for(int i = 0; i < all_users.size(); i++)
-            {
-                if(all_users[i][4] == "2" || all_users[i][4] == "3")
-                {
-                    all_doctors.push_back(all_users[i][0]);
-                }
-            }
-            return all_doctors;
-        }
-
-        std::vector<std::string> getUnassignedPatients()
-        {
-            std::vector<std::vector<std::string>> all_users = extractCSV("users.csv");
-            std::vector<std::vector<std::string>> all_assigned = extractCSV("assigned.csv");
-            std::vector<std::string> unassigned_patients;
-            bool found = false;
-
-            for(int i = 0; i < all_users.size(); i++)
-            {
-                if(all_users[i][4] == "1")
-                {
-                    found = false;
-                    for(int x = 0; x < all_assigned.size(); x++)
-                    {
-                        if(all_users[i][4] == all_assigned[x][1])
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if(found == false)
-                    {
-                        unassigned_patients.push_back(all_users[i][0]);
-                    }
-                }
-            }
-
-            return unassigned_patients;
-        }
-
-        bool upgradeDoctor(std::string given_username)
-        {
-            std::vector<std::vector<std::string>> doctors = extractCSV("users.csv");
-            bool found = false;
-            for(int i = 0; i < doctors.size(); i++ )
-            {
-                if(doctors[i][0] == given_username)
-                {
-                    if(std::stoi(doctors[i][4]) == 2)
-                    {
-                        found = true;
-                        doctors[i][4] = std::to_string(std::stoi(doctors[i][4]) + 1);
-                        std::string to_write;
-                        for(int x = 0; x < doctors.size(); x++)
-                        {
-                            to_write += doctors[x][0] + ", " + doctors[x][1] + ", " + doctors[x][2] + ", " + doctors[x][3] + ", " + doctors[x][4] + ", " + doctors[x][5] + "\n";
-                        }
-                        writeToCSV("users.csv", to_write);
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
-            if(found == false)
-            {
-                return false;
-            }
-        }
-};
-
-class Patient : public User
-{
-    private:
-        std::vector<std::string> conditions;
-        std::vector<std::string> prescriptions;
-        double cost; //per day
-
-        std::vector<std::string> getConditions(std::string username, bool type = true)
-        {
-            //True = conditions, False = prescriptions
-            std::vector<std::vector<std::string>> all_conditions = (type) ? extractCSV("conditions.csv") : extractCSV("prescriptions.csv");
-            int pos = 0;
-            for(int i = 0; i < all_conditions.size(); i++)
-            {
-                if(all_conditions[i][0] == username)
-                {
-                    pos = i;
-                    break;
-                }
-            }
-
-            std::vector<std::string> current_conditions;
-
-            for(int i = 1; i < all_conditions[pos].size(); i++)
-            {
-                current_conditions.push_back(all_conditions[pos][i]);
-            }
-            return current_conditions;
-        }
-
-        double getCost (std::vector<std::string> conditions)
-        {
-            double cost = 0;
-            std::map<int, std::string> condition_map{{0, "diabetes.csv"}, {1, "cancer.csv"}, {2, "smoking.csv"}};
-            int val = 0;
-            for(int i = 0; i < 3; i++)
-            {
-                val = std::stoi(conditions[i]);
-                val -= 1;
-                if(val != -1)
-                {
-                    cost = cost + (std::stod(extractCSV(condition_map[i])[val][3]) * std::stod(extractCSV(condition_map[i])[val][4]));
-                }
-            }
-            return cost;
-        }
-
-    public:
-        Patient(std::string given_username)
-        {
-            username = given_username;
-            conditions = getConditions(username);
-            prescriptions = getConditions(username, false);
-            cost = getCost(conditions);
-        }
-
-        std::vector<std::string> userConditions() 
-        {
-            return conditions;
-        }
-
-        std::vector<std::string> userPrescriptions()
-        {
-            return prescriptions;
-        }
-
-        double userCost()
-        {
-            return cost;
-        }
-
-        void refresh()
-        {
-            conditions = getConditions(username);
-            prescriptions = getConditions(username, false);
-            cost = getCost(conditions);
-        }
-};
-
 void paitentMenu(std::string username)
 {
     std::vector<std::vector<std::string>> verification = extractCSV("verify.csv");
@@ -746,6 +331,8 @@ void paitentMenu(std::string username)
                 break;
             case 2:
                 std::cout << "$" << user.userCost() << " per day\n";
+                std::cout << "$" << user.userCost()*7 << " per week\n";
+                std::cout << "$" << user.userCost()*28 << " per month (4 week period)\n";
                 break;
             case 3:
                 loggedIn = false;
@@ -924,7 +511,24 @@ void headDoctorMenu(std::string username)
 void pharmacistMenu(std::string username)
 {
     Pharmacist user(username);
+    int choice = 0;
+    bool loggedIn = true;
+
     clearTerm();
+
+    while (loggedIn == true){
+        std::cout << "Welcome Doctor: What would you like to do:\n";
+        std::cout << "1. Get a list of your assigned patients\n";
+        std::cout << "2. Get a patients conditions and prescriptions\n";
+        std::cout << "3. Log out\n";
+        std::cout << ":: ";
+        std::cin >> choice;
+        std::string patient_username;
+        switch(choice)
+        {
+
+        }
+    }
 }
 
 bool login()
