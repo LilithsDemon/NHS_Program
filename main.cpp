@@ -15,6 +15,7 @@
 
 void clearTerm()
 {
+    // This clears out the terminal so that the terminal looks better
     std::cout << "\033[2J\033[1;1H";
 }
 
@@ -44,7 +45,7 @@ unsigned long hashPassword(std::string password, std::string salt)
 
 bool passwordCheck(std::string username, std::string given_password)
 {
-    std::ifstream users_read("users.csv");
+    std::ifstream users_read("users.csv"); //Reads file for the user
     std::string name = "";
 
     std::string data;
@@ -52,13 +53,14 @@ bool passwordCheck(std::string username, std::string given_password)
     while (getline(users_read, data))
     {
         int end_of_name = data.find(",");
-        if(data.substr(0, end_of_name) == username)
+        if(data.substr(0, end_of_name) == username) //Finds this users data
         {
-            data = data.substr(end_of_name + 1, data.size()-end_of_name);
-            int end_of_hashed_password = data.find(",");
+            data = data.substr(end_of_name + 1, data.size()-end_of_name); 
+            int end_of_hashed_password = data.find(","); 
             long saved_password = std::atol(data.substr(0, end_of_hashed_password).c_str());
             data = data.substr(end_of_hashed_password + 1, data.size()-end_of_hashed_password+1);
             int end_of_salt = data.find(",");
+            //Sub strings are used to be able to break down the csv file for the information we need
             std::string salt = data.substr(0, end_of_salt);
             if(hashPassword(given_password, salt) == saved_password) //If hashing given password with same salt makes saved password then it is correct password
             {
@@ -69,8 +71,6 @@ bool passwordCheck(std::string username, std::string given_password)
     }
     users_read.close();
     return false;
-
-    
 }
 
 void createNewAccount(std::string username, std::string password, std::string age, int access)
@@ -78,7 +78,8 @@ void createNewAccount(std::string username, std::string password, std::string ag
     //This past will create a new account
     //It should ask the user for a password and username
     //A user access level should be assigned
-    //1 = user 2= hospital staff
+    //1 = user 2 = doctor/nurse 3 = headdoctor 4 = pharmacist
+    //Verified file finds if a user has done the form yet
     
     std::string salt = generateSalt();
     unsigned long hashed_password = hashPassword(password, salt);
@@ -88,11 +89,12 @@ void createNewAccount(std::string username, std::string password, std::string ag
 
     writeToCSV("users.csv", current_user_data);
     writeToCSV("verify.csv", current_verification_data);
-
+    // Writes to files what we need
 }
 
 bool checkForUsername(std::string username)
 {
+    //This will go through the csv file and check for the name if it is there
     std::vector<std::vector<std::string>> users = extractCSV("users.csv");
     for(int i = 0; i < users.size(); i++)
     {
@@ -150,6 +152,7 @@ std::vector<std::string> accountCreation()
 
 std::string getUserRank(std::string username)
 {
+    //Returns the rank of 1-4 dependant of their role in the company
     std::vector<std::vector<std::string>> users = extractCSV("users.csv");
     for(int i = 0; i < users.size(); i++)
     {
@@ -164,6 +167,7 @@ std::string getUserRank(std::string username)
 
 void verifyUser(std::string username)
 {
+    //This verifys the user as having done the form
     std::vector<std::vector<std::string>> verifications = extractCSV("verify.csv");
     std::string string_to_write = "";
     for(int i = 0; i < verifications.size(); i++)
@@ -179,6 +183,7 @@ void verifyUser(std::string username)
 
 void patientForm(std::string username)
 {
+    //This is a form the patient needs to do to be able to get access to the entire program.
     std::string cancer;
     int cancer_type = 0;
     std::string diabetes;
@@ -186,7 +191,7 @@ void patientForm(std::string username)
     std::string smoking;
     int smoking_type = 0;
     clearTerm();
-    std::cout << "\nWelcome to the NHS program, this is a qestionaire so that you can get your medical data\n";
+    std::cout << "\nWelcome to the NHS program, this is a questionaire so that you can get your medical data\n";
     std::string string_to_write = username;
     while(true){
         std::cout << "First do you have cancer: (y/n): ";
@@ -286,7 +291,7 @@ void patientForm(std::string username)
     }
     std::cout << "Thank you for completing this form";
     writeToCSV("conditions.csv", string_to_write, 0);
-    verifyUser(username);
+    verifyUser(username); //writes to file to ensure that everyone can see
 }
 
 void paitentMenu(std::string username)
@@ -310,7 +315,7 @@ void paitentMenu(std::string username)
         patientForm(username);
     }
 
-    Patient user(username);
+    Patient user(username); //Uses a class for the patient from accounts.h
 
     int choice = 0;
     bool loggedIn = true;
@@ -386,14 +391,14 @@ std::vector<std::string> change_prescription()
         {
         case 1:
             prescriptions = extractCSV("diabetes.csv");
-            base_value = 0;
+            base_value = 0; //base value is for reading from treatments, gives information for everything
             condition = 1;
             correct_choice = true;
             break;
         case 2:
             prescriptions = extractCSV("smoking.csv");
             base_value = 2;
-            condition = 2;
+            condition = 2; //Condition value
             correct_choice = true;
             break;
         case 3:
@@ -415,10 +420,10 @@ std::vector<std::string> change_prescription()
         for(int i = 0; i < prescriptions.size(); i++)
         {
             prescription_data = std::to_string(i+1) + ". " + all_prescriptions[i + base_value][2] + ", " + all_prescriptions[i + base_value][3] + ", " + all_prescriptions[i + base_value][4] + ", " + all_prescriptions[i + base_value][5] + "\n";
-            std::cout << prescription_data + ":: ";
+            std::cout << prescription_data + ":: "; // Data to be written to the display
         }
         std::cin >> prescription_choice;
-        try{
+        try{  //used to stop some possible errors that might occur
             if(std::stoi(prescription_choice) >= 0 && std::stoi(prescription_choice) <= prescriptions.size())
             {
                 correct_choice = true;
@@ -438,7 +443,7 @@ std::vector<std::string> change_prescription()
 
 void doctorMenu(std::string username)
 {
-    Doctor user(username);
+    Doctor user(username); // Doctors class from accounts.h
     int choice = 0;
     bool loggedIn = true;
 
@@ -497,7 +502,7 @@ void doctorMenu(std::string username)
                         found = true;
                     }
                 }
-                std::cout << (found) ? user.getPatientInfo(patient_username) : "\nUser not found\n";
+                std::cout << (found) ? user.getPatientInfo(patient_username) : "\nUser not found\n"; //Tenary (1 line if statement)
                 break;
             case 4:
                 loggedIn = false;

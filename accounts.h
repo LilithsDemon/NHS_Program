@@ -10,7 +10,7 @@
 
 class User
 {
-    protected:
+    protected: //prtected means that any class that inherits it can still see private while outside cannot
         std::string username;
 };
 
@@ -47,7 +47,7 @@ class Patient : public User
         double getCost (std::vector<std::string> conditions)
         {
             double cost = 0;
-            std::map<int, std::string> condition_map{{0, "diabetes.csv"}, {1, "cancer.csv"}, {2, "smoking.csv"}};
+            std::map<int, std::string> condition_map{{0, "diabetes.csv"}, {1, "cancer.csv"}, {2, "smoking.csv"}}; //map for going through each one later
             int val = 0;
             for(int i = 0; i < 3; i++)
             {
@@ -55,14 +55,14 @@ class Patient : public User
                 val -= 1;
                 if(val != -1)
                 {
-                    cost = cost + (std::stod(extractCSV(condition_map[i])[val][3]) * std::stod(extractCSV(condition_map[i])[val][4]));
+                    cost = cost + (std::stod(extractCSV(condition_map[i])[val][3]) * std::stod(extractCSV(condition_map[i])[val][4])); //get the information needed from where
                 }
             }
             return cost;
         }
 
     public:
-        Patient(std::string given_username)
+        Patient(std::string given_username) //constructor
         {
             username = given_username;
             conditions = getConditions(username);
@@ -270,6 +270,7 @@ class Doctor : public Pharmacist
                 return false;
             }
            return Pharmacist::changePrescription(given_username, condition, prescription); 
+           //Runs the pharmacist version but only if it is on one of their patients
         }
 };
 
@@ -288,6 +289,7 @@ class HeadDoctor : public Doctor
         bool changePrescription(std::string given_username, int condition, int prescription)
         {
            return Pharmacist::changePrescription(given_username, condition, prescription); 
+           // Changed this back to the pharmacist version as it inherits from Doctor after Pharmacist
         }
 
         void assignPatient(std::string username, std::string doctor)

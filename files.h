@@ -11,7 +11,9 @@ void writeToCSV(std::string file_name, std::string to_write, bool type = 1)
 {
     std::ofstream file_write(file_name);
         
-    if(type == 1){
+    // type 1 is for appending to a file
+
+    if(type == 1){ 
         std::vector<std::string> all_data;
         std::string data;
 
@@ -32,6 +34,9 @@ void writeToCSV(std::string file_name, std::string to_write, bool type = 1)
             file_write << all_data[i];
         }
     }
+
+    // the other type makes the file all the text you want it to be
+
     else{
         file_write << to_write;
     }
@@ -43,7 +48,7 @@ std::vector<std::vector<std::string>> extractCSV(std::string file_name)
 {
     std::ifstream file(file_name);
     std::string data;
-    std::string delim = ",";
+    std::string delim = ","; //deliminator for splitting a csv file
 
     std::vector<std::vector<std::string>> all_data;
     std::vector<std::string> current_data;
@@ -53,13 +58,14 @@ std::vector<std::vector<std::string>> extractCSV(std::string file_name)
         current_data.clear();
         while(true)
         {
+            //opens each line and splits at any ','
             if(strstr(data.c_str(), delim.c_str()))
             {
                 int pos = data.find(',');
                 current_data.push_back(data.substr(0, pos));
                 data = data.substr(pos+1, data.size());
             }
-            else
+            else //if there is no ',' then the rest must be the end of a ','
             {
                 current_data.push_back(data);
                 all_data.push_back(current_data);
