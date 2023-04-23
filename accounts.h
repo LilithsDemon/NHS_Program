@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include <array>
@@ -5,12 +6,91 @@
 #include <fstream>
 #include <vector>
 #include <bits/stdc++.h>
-#include <files.h>
+#include "files.h"
 
 class User
 {
     protected:
         std::string username;
+};
+
+class Patient : public User
+{
+    private:
+        std::vector<std::string> conditions;
+        std::vector<std::string> prescriptions;
+        double cost; //per day
+
+        std::vector<std::string> getConditions(std::string username, bool type = true)
+        {
+            //True = conditions, False = prescriptions
+            std::vector<std::vector<std::string>> all_conditions = (type) ? extractCSV("conditions.csv") : extractCSV("prescriptions.csv");
+            int pos = 0;
+            for(int i = 0; i < all_conditions.size(); i++)
+            {
+                if(all_conditions[i][0] == username)
+                {
+                    pos = i;
+                    break;
+                }
+            }
+
+            std::vector<std::string> current_conditions;
+
+            for(int i = 1; i < all_conditions[pos].size(); i++)
+            {
+                current_conditions.push_back(all_conditions[pos][i]);
+            }
+            return current_conditions;
+        }
+
+        double getCost (std::vector<std::string> conditions)
+        {
+            double cost = 0;
+            std::map<int, std::string> condition_map{{0, "diabetes.csv"}, {1, "cancer.csv"}, {2, "smoking.csv"}};
+            int val = 0;
+            for(int i = 0; i < 3; i++)
+            {
+                val = std::stoi(conditions[i]);
+                val -= 1;
+                if(val != -1)
+                {
+                    cost = cost + (std::stod(extractCSV(condition_map[i])[val][3]) * std::stod(extractCSV(condition_map[i])[val][4]));
+                }
+            }
+            return cost;
+        }
+
+    public:
+        Patient(std::string given_username)
+        {
+            username = given_username;
+            conditions = getConditions(username);
+            prescriptions = getConditions(username, false);
+            cost = getCost(conditions);
+        }
+
+        std::vector<std::string> userConditions() 
+        {
+            return conditions;
+        }
+
+        std::vector<std::string> userPrescriptions()
+        {
+            return prescriptions;
+        }
+
+        double userCost()
+        {
+            return cost;
+        }
+
+        void refresh()
+        {
+            conditions = getConditions(username);
+            prescriptions = getConditions(username, false);
+            cost = getCost(conditions);
+        }
 };
 
 
@@ -51,49 +131,6 @@ class Pharmacist : public User
             {
                 return false;
             }
-        }
-};
-
-class Doctor : public Pharmacist
-{
-    protected:
-        std::vector<std::string> assigned_patients;
-
-        std::vector<std::string> getAssignedPatients()
-        {
-            std::vector<std::vector<std::string>> all_patients = extractCSV("assigned.csv");
-            std::vector<std::string> patients;
-            for(int i = 0; i < all_patients.size(); i++)
-            {
-                if(all_patients[i][0] == username)
-                {
-                    patients.push_back(all_patients[i][1]);
-                }
-            }
-            
-            return patients;
-        }
-
-    public:
-        Doctor(std::string given_username)
-        {
-            username = given_username;
-            assigned_patients = getAssignedPatients();
-        }
-
-        Doctor()
-        {
-            
-        };
-
-        std::vector<std::string> getPatients()
-        {
-            return assigned_patients;
-        }
-
-        bool changePrescription(std::string given_username, int condition, int prescription)
-        {
-
         }
 
         std::string getPatientInfo(std::string given_username)
@@ -175,6 +212,67 @@ class Doctor : public Pharmacist
         }
 };
 
+class Doctor : public Pharmacist
+{
+    protected:
+        std::vector<std::string> assigned_patients;
+
+        std::vector<std::string> getAssignedPatients()
+        {
+            std::vector<std::vector<std::string>> all_patients = extractCSV("assigned.csv");
+            std::vector<std::string> patients;
+            for(int i = 0; i < all_patients.size(); i++)
+            {
+                if(all_patients[i][0] == username)
+                {
+                    patients.push_back(all_patients[i][1]);
+                }
+            }
+            
+            return patients;
+        }
+
+        bool checkPatient(std::string given_username)
+        {
+            bool found = false;
+            for(int i = 0; i < assigned_patients.size(); i++)
+            {
+                if(assigned_patients[i] == given_username)
+                {
+                    found == true;
+                    break;
+                }
+            }
+            return found;
+        }
+
+    public:
+        Doctor(std::string given_username)
+        {
+            username = given_username;
+            assigned_patients = getAssignedPatients();
+        }
+
+        Doctor()
+        {
+            
+        };
+
+        std::vector<std::string> getPatients()
+        {
+            return assigned_patients;
+        }
+
+        bool changePrescription(std::string given_username, int condition, int prescription)
+        {
+            if(!checkPatient(given_username))
+            {
+                return false;
+            }
+           return Pharmacist::changePrescription(given_username, condition, prescription); 
+        }
+};
+
 class HeadDoctor : public Doctor
 {
     private:
@@ -185,6 +283,11 @@ class HeadDoctor : public Doctor
             username = given_username;
             assigned_patients = getAssignedPatients();
             doctors = getAllDoctors();
+        }
+
+        bool changePrescription(std::string given_username, int condition, int prescription)
+        {
+           return Pharmacist::changePrescription(given_username, condition, prescription); 
         }
 
         void assignPatient(std::string username, std::string doctor)
@@ -290,84 +393,6 @@ class HeadDoctor : public Doctor
             {
                 return false;
             }
-        }
-};
-
-class Patient : public User
-{
-    private:
-        std::vector<std::string> conditions;
-        std::vector<std::string> prescriptions;
-        double cost; //per day
-
-        std::vector<std::string> getConditions(std::string username, bool type = true)
-        {
-            //True = conditions, False = prescriptions
-            std::vector<std::vector<std::string>> all_conditions = (type) ? extractCSV("conditions.csv") : extractCSV("prescriptions.csv");
-            int pos = 0;
-            for(int i = 0; i < all_conditions.size(); i++)
-            {
-                if(all_conditions[i][0] == username)
-                {
-                    pos = i;
-                    break;
-                }
-            }
-
-            std::vector<std::string> current_conditions;
-
-            for(int i = 1; i < all_conditions[pos].size(); i++)
-            {
-                current_conditions.push_back(all_conditions[pos][i]);
-            }
-            return current_conditions;
-        }
-
-        double getCost (std::vector<std::string> conditions)
-        {
-            double cost = 0;
-            std::map<int, std::string> condition_map{{0, "diabetes.csv"}, {1, "cancer.csv"}, {2, "smoking.csv"}};
-            int val = 0;
-            for(int i = 0; i < 3; i++)
-            {
-                val = std::stoi(conditions[i]);
-                val -= 1;
-                if(val != -1)
-                {
-                    cost = cost + (std::stod(extractCSV(condition_map[i])[val][3]) * std::stod(extractCSV(condition_map[i])[val][4]));
-                }
-            }
-            return cost;
-        }
-
-    public:
-        Patient(std::string given_username)
-        {
-            username = given_username;
-            conditions = getConditions(username);
-            prescriptions = getConditions(username, false);
-            cost = getCost(conditions);
-        }
-
-        std::vector<std::string> userConditions() 
-        {
-            return conditions;
-        }
-
-        std::vector<std::string> userPrescriptions()
-        {
-            return prescriptions;
-        }
-
-        double userCost()
-        {
-            return cost;
-        }
-
-        void refresh()
-        {
-            conditions = getConditions(username);
-            prescriptions = getConditions(username, false);
-            cost = getCost(conditions);
+            return true;
         }
 };
