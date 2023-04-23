@@ -87,8 +87,8 @@ void createNewAccount(std::string username, std::string password, std::string ag
     std::string current_user_data = username + "," + std::to_string(hashed_password) + "," + salt + "," + age + "," + std::to_string(access); // Creates the data in the form of csv for the next person
     std::string current_verification_data = username + "," + "false";
 
-    writeToCSV("users.csv", current_user_data);
-    writeToCSV("verify.csv", current_verification_data);
+    writeToCSV("users.csv", current_user_data, true);
+    writeToCSV("verify.csv", current_verification_data, 1);
     // Writes to files what we need
 }
 
@@ -335,10 +335,11 @@ void paitentMenu(std::string username)
                 patientForm(username);
                 break;
             case 2:
+                clearTerm();
                 std::cout << "$" << user.userCost() << " per day\n";
                 std::cout << "$" << user.userCost()*7 << " per week\n";
                 std::cout << "$" << user.userCost()*28 << " per month (4 week period)\n";
-                std::cout << "$" << user.userCost()*7*52 << " per year (52 week period)\n";
+                std::cout << "$" << user.userCost()*7*52 << " per year (52 week period)\n\n";
                 break;
             case 3:
                 loggedIn = false;
@@ -383,8 +384,8 @@ std::vector<std::string> change_prescription()
         std::cout << "\nWhat would you like to change: \n";
         int option = 0;
         std::cout << "1. Prescription for diabetes:\n";
-        std::cout << "2. Prescription for smoking:\n";
-        std::cout << "3. Prescription for cancer:\n";
+        std::cout << "2. Prescription for cancer:\n";
+        std::cout << "3. Prescription for smoking:\n";
         std::cout << ":: ";
         std::cin >> option;
         switch (option)
@@ -396,13 +397,13 @@ std::vector<std::string> change_prescription()
             correct_choice = true;
             break;
         case 2:
-            prescriptions = extractCSV("smoking.csv");
+            prescriptions = extractCSV("cancer.csv");
             base_value = 2;
             condition = 2; //Condition value
             correct_choice = true;
             break;
         case 3:
-            prescriptions = extractCSV("cancer.csv");
+            prescriptions = extractCSV("smoking.csv");
             base_value = 6;
             condition = 3;
             correct_choice = true;
@@ -460,7 +461,8 @@ void doctorMenu(std::string username)
         std::cout << "1. Get a list of your assigned patients\n";
         std::cout << "2. Change a patients prescriptions\n";
         std::cout << "3. Get a patients conditions and prescriptions\n";
-        std::cout << "4. Log out\n";
+        std::cout << "4. Get data\n";
+        std::cout << "5. Log out\n";
         std::cout << ":: ";
         std::cin >> choice;
         std::string patient_username;
@@ -505,6 +507,9 @@ void doctorMenu(std::string username)
                 std::cout << (found) ? user.getPatientInfo(patient_username) : "\nUser not found\n"; //Tenary (1 line if statement)
                 break;
             case 4:
+                user.getData();
+                break;
+            case 5:
                 loggedIn = false;
                 break;
             default:
@@ -532,9 +537,10 @@ void headDoctorMenu(std::string username)
         std::cout << "3. Change a patients prescriptions\n";
         std::cout << "4. Get a list of the unassigned patients\n";
         std::cout << "5. Assign a patient to a doctor\n";
-        std::cout << "6. Create a new doctor\n";
-        std::cout << "7. Upgrade a Doctor to head doctor\n";
-        std::cout << "8. Log out\n";
+        std::cout << "6. Get data\n";
+        std::cout << "7. Create a new doctor\n";
+        std::cout << "8. Upgrade a Doctor to head doctor\n";
+        std::cout << "9. Log out\n";
         std::cout << ":: ";
         std::cin >> choice;
         std::string patient_username;
@@ -625,6 +631,9 @@ void headDoctorMenu(std::string username)
                 user.assignPatient(patient_username, doctor_username);
                 break; 
             case 6:
+                user.getData();
+                break;
+            case 7:
                 std::cout << "What is the username of the doctor: ";
                 std::cin >> new_doctor;
                 std::cout << "What is their password: ";
@@ -633,13 +642,13 @@ void headDoctorMenu(std::string username)
                 std::cin >> age;
                 createNewAccount(new_doctor, password, std::to_string(age), 2);
                 break;
-            case 7:
+            case 8:
                 std::cout << "What is the username of the doctor";
                 std::cin >> new_doctor; 
                 found = user.upgradeDoctor(new_doctor);
                 std::cout << (found) ? "Doctor has been updated to a head doctor\n" : "Sorry that did not work, either doctor does not exist or is already a head doctor";
                 break;
-            case 8:
+            case 9:
                 loggedIn = false;
                 break;
             default:
@@ -784,7 +793,6 @@ void startMenu()
         {
             case 1:
                 login();
-                clearTerm();
                 break;
             case 2:
                 users_data = accountCreation();
@@ -803,6 +811,18 @@ void startMenu()
 int main()
 {
     startMenu();
+
+    /* testing
+    writeToCSV("test.csv", "to get rid");
+    std::cout << extractCSV("test.csv")[0][0];
+    writeToCSV("test.csv", "hello", 0);
+    std::cout << extractCSV("test.csv")[0][0];
+    writeToCSV("test.csv", "world", 1);
+    for(int i = 0; i < extractCSV("test.csv").size(); i++)
+    {
+        std::cout << extractCSV("test.csv")[i][0];
+    }
+    */
 
     return 0;
 }

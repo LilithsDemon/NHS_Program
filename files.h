@@ -9,39 +9,22 @@
 
 void writeToCSV(std::string file_name, std::string to_write, bool type = 1)
 {
-    std::ofstream file_write(file_name);
-        
     // type 1 is for appending to a file
+    if(type == 1){
+        std::ofstream outfile;
 
-    if(type == 1){ 
-        std::vector<std::string> all_data;
-        std::string data;
-
-        //First read all file
-        std::ifstream file_read(file_name);
-
-        while(getline(file_read, data))
-        {
-            all_data.push_back(data + "\n");
-        }
-
-        file_read.close();
-
-        all_data.push_back(to_write);
-
-        for(int i = 0; i < all_data.size(); i++)
-        {
-            file_write << all_data[i];
-        }
+        outfile.open(file_name, std::ios_base::app); // append instead of overwrite
+        outfile << to_write + "\n"; 
     }
 
     // the other type makes the file all the text you want it to be
 
     else{
+        std::ofstream file_write(file_name);
         file_write << to_write;
+        file_write.close();
     }
 
-    file_write.close();
 }
 
 std::vector<std::vector<std::string>> extractCSV(std::string file_name)

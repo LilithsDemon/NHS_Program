@@ -60,14 +60,14 @@ class Patient : public User
             }
             return cost;
         }
-
+        
     public:
         Patient(std::string given_username) //constructor
         {
             username = given_username;
             conditions = getConditions(username);
             prescriptions = getConditions(username, false);
-            cost = getCost(conditions);
+            cost = getCost(prescriptions);
         }
 
         std::vector<std::string> userConditions() 
@@ -271,6 +271,51 @@ class Doctor : public Pharmacist
             }
            return Pharmacist::changePrescription(given_username, condition, prescription); 
            //Runs the pharmacist version but only if it is on one of their patients
+        }
+
+        std::string getData()
+        {
+            std::vector<std::vector<std::string>> all_conditions = extractCSV("conditions.csv");
+            std::vector<std::vector<std::string>> all_users = extractCSV("users.csv");
+            int cancer_age = 0;
+            int cancer_val = 0;
+            int diabetes_age = 0;
+            int diabetes_val = 0;
+            int smoking_val = 0;
+
+            for(int i = 0; i < all_conditions.size(); i++)
+            {
+                if(std::stoi(all_conditions[i][1]) > 0)
+                {
+                    diabetes_val += 1;
+                    for (int x = 0; x < all_users.size(); x++)
+                    {
+                        if(all_users[0] == all_conditions[0])
+                        {
+                            diabetes_age += std::stoi(all_users[x][3]);
+                        }
+                    }
+                }
+                if(std::stoi(all_conditions[i][2]) > 0)
+                {
+                    cancer_val += 1;
+                    for (int x = 0; x < all_users.size(); x++)
+                    {
+                        if(all_users[0] == all_conditions[0])
+                        {
+                            cancer_age += std::stoi(all_users[x][3]);
+                        }
+                    }
+                }
+                if(std::stoi(all_conditions[i][3]) > 0)
+                {
+                    smoking_val += 1;
+                }
+            }
+
+            std::cout << "The average of someone with diabetes is: " + std::to_string(diabetes_val / diabetes_age) + "\n";
+            std::cout << "The average of someone with cancer is: " + std::to_string(cancer_val / cancer_age) + "\n";
+            std::cout << "If you smoke there is a " + std::to_string(cancer_val / smoking_val) + "% chance of having cancer \n";
         }
 };
 
